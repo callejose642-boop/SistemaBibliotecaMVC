@@ -1,17 +1,19 @@
 FROM php:8.2-apache
 
-# Habilitar el módulo de reescritura
+# 1. Habilitar reescritura
 RUN a2enmod rewrite
 
-# Copiar todo el código al directorio raíz de Apache
+# 2. Copiar código
 COPY . /var/www/html/
 
+# 3. Cambio clave: Modificar el archivo de configuración de forma más robusta
+# Reemplazamos DocumentRoot /var/www/html por DocumentRoot /var/www/html/public
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-# Esto le dice a Apache que el "DocumentRoot" es /var/www/html/public
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+# 4. Asegurar que Directory también apunte a public
+RUN sed -i 's|<Directory /var/www/html>|<Directory /var/www/html/public>|g' /etc/apache2/sites-available/000-default.conf
 
-# Ajustar permisos
-RUN chown -R www-data:www-data /var/www/html
+# 5. Ajustar permisos solo a la carpeta public
+RUN chown -R www-data:www-data /var/www/html/public
 
-# Exponer el puerto 80
 EXPOSE 80
